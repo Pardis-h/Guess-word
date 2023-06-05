@@ -22,6 +22,7 @@ function GameBox() {
   const [error, setError] = useState("");
   const [saveLetter, setSaveLetter] = useState(["", "", "", "", ""]);
   const [level, setLevel] = useState("easy");
+  const [guessCount, setGuessCount] = useState(0);
 
   // Function to start the game
   const startGame = () => {
@@ -41,6 +42,7 @@ function GameBox() {
   const submitHandler = (e) => {
     e.preventDefault();
     setResult(getHighlightedWord(randomItem, saveLetter, guess));
+    // check User Guess
     if (guess.length === 0) {
       setError("Please enter your guess!");
       setMsg("");
@@ -54,7 +56,9 @@ function GameBox() {
       setError("Wrong!");
       setMsg("");
     }
+    // robot guess
     robotSubmit(robotGuess);
+    setGuessCount((prevGuessCount) => prevGuessCount + 1);
   };
 
   // Function to set the initial underscored word
@@ -68,18 +72,93 @@ function GameBox() {
   // Robot guess
   const robotFindWord = () => {
     console.log(secretWords.length);
-    if (saveLetter.join("") && level !== "easy") {
-      for (let i = 0; i < saveLetter.length; i++) {
-        if (saveLetter[i]) {
-          const filterData = secretWords.filter(
-            (word) => word[i] === saveLetter[i]
-          );
-          setSecretWords(filterData);
-        }
-        console.log(secretWords.length);
+    let filterData = [];
+    let filterDatas = [];
+    let minDataList = [];
+
+    // Find and Save correct Letters
+    // check letter exist or not & Reduce Data List With fimilar word that include correct word we found
+    saveLetter.map((letter, key) => {
+      if (letter !== "") {
+        filterData = secretWords.filter((word) => word[key] === letter);
+        filterDatas = [...filterDatas, [filterData]];
+      } else if (level === "easy") {
+        const vowels = ["A", "E", "I", "O", "U"];
+        vowels.map((vowel) => {
+          if (randomItem[key] === vowel) {
+            saveLetter[key] = vowel;
+          }
+        });
+      } else if (level === "medium") {
+        const vowels = ["A", "E", "I", "O", "U", "T", "N", "S", "R", "H", "L"];
+        vowels.map((vowel) => {
+          if (randomItem[key] === vowel) {
+            saveLetter[key] = vowel;
+          }
+        });
+      } else if (guessCount > 2 && level === "hard") {
+        const letters = [
+          "A",
+          "B",
+          "C",
+          "D",
+          "E",
+          "F",
+          "G",
+          "H",
+          "I",
+          "J",
+          "K",
+          "L",
+          "M",
+          "N",
+          "O",
+          "P",
+          "Q",
+          "R",
+          "S",
+          "T",
+          "U",
+          "V",
+          "W",
+          "X",
+          "Y",
+          "Z",
+        ];
+        letters.map((l) => {
+          if (randomItem[key] === l) {
+            saveLetter[key] = l;
+            console.log(l);
+          }
+          console.log(saveLetter);
+        });
+      }
+      if (filterDatas.length) {
+        minDataList = filterDatas.reduce(function (a, b) {
+          return a.length <= b.length ? a : b;
+        });
+        setSecretWords(minDataList[0]);
+      }
+    });
+
+    let randomIndex = Math.floor(Math.random() * secretWords.length);
+    level === "easy"
+      ? (randomIndex = Math.floor(Math.random() * secretWords.length))
+      : null;
+    if (level === "easy" && randomItem) {
+      if (randomIndex < secretWords.indexOf(randomItem)) {
+        randomIndex = Math.floor(
+          Math.random() * (secretWords.indexOf(randomItem) - randomIndex + 1)
+        );
+      } else if (
+        randomIndex > secretWords.indexOf(randomItem) &&
+        secretWords.length > 10
+      ) {
+        randomIndex = Math.floor(
+          Math.random() * (randomIndex - secretWords.indexOf(randomItem) + 1)
+        );
       }
     }
-    const randomIndex = Math.floor(Math.random() * secretWords.length);
     let robotGuesses = secretWords[randomIndex];
     if (secretWords.length === 1) {
       robotGuesses = secretWords[0];
@@ -94,7 +173,7 @@ function GameBox() {
       setPreviousRobotGuess([...previousRobotGuess, guess.toUpperCase()]);
       setError("");
       setRobotMsg("robot Win!");
-    } else if (saveLetter.join("") === randomItem && level == "hard") {
+    } else if (saveLetter.join("") === randomItem) {
       guess = saveLetter.join("");
       setRobotGuess(saveLetter.join(""));
       setPreviousRobotGuess([...previousRobotGuess, guess.toUpperCase()]);
@@ -121,7 +200,14 @@ function GameBox() {
       saveLetter,
       level
     );
-  }, [randomItem, previousGuess, previousRobotGuess, robotGuess]);
+  }, [
+    randomItem,
+    previousGuess,
+    previousRobotGuess,
+    robotGuess,
+    saveLetter,
+    secretWords,
+  ]);
 
   return (
     <div className="mb-10 container mx-auto flex justify-center max-w-xl my-8">
@@ -129,7 +215,6 @@ function GameBox() {
         <h2 className="text-xl font-semibold text-gray-900 mb-8 text-center">
           Guess the word! :)
         </h2>
-
         {!isStart ? (
           <div className="text-center">
             <div className="mb-4 justify-center items-center gap-3 flex">

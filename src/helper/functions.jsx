@@ -12,7 +12,7 @@ export const getPreviousGuesses = (previousGuess, user, randomItem, saveLetter) 
         const myClassName = isCorrectGuess
           ? user === "user"
             ? "text-green-600 bg-green-200 p-2 rounded-sm m-1 inline-block"
-            : "text-gray-500 bg-gray-200 p-2 rounded-sm m-1 inline-block"
+            : "text-gray-500 bg-green-200 p-2 rounded-sm m-1 inline-block"
           : "text-gray-500 bg-gray-200 p-2 rounded-sm m-1 inline-block";
         return (
           <span key={index} className={myClassName}>
